@@ -135,15 +135,35 @@ void
 syscall(void)
 {
   int num;
+  char path[MAXPATH];
   struct proc *p = myproc();
 
   num = p->trapframe->a7;
   if(num > 0 && num < NELEM(syscalls) && syscalls[num]) {
     if (BIT1(p, num) == 1) {
-      // Check interpose bitmask 
-      // bit 1 means this sys call will be restricted
-      // return -1 to user app in p->trapframe->a0
-      p->trapframe->a0 = -1;
+      // Check sandbox bitmask
+      // if sys calls isn't open or exec, it will be restricted
+      // if it is open or exec, and the pathname in sandbox and sys call is same, it will be processed
+      // otherwise, ignore it
+
+      switch (num)
+      {
+      case SYS_open:
+      case SYS_exec:
+        if(argstr(0, path, MAXPATH) < 0)
+          p->trapframe->a0 = -1;
+
+        if (strncmp(p->spath, path, strlen(path)) == 0)
+          p->trapframe->a0 = syscalls[num]();
+        else
+          p->trapframe->a0 = -1;
+
+        break;
+      
+      default:
+        p->trapframe->a0 = -1;
+        break;
+      }
     } else {
       // Use num to lookup the system call function for num, call it,
       // and store its return value in p->trapframe->a0

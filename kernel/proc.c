@@ -170,6 +170,7 @@ freeproc(struct proc *p)
   p->xstate = 0;
   p->state = UNUSED;
   p->smask = 0x0;
+  p->spath[0] = '\0';
 }
 
 // Create a user page table for a given process, with no user memory,
@@ -285,8 +286,9 @@ kfork(void)
     if(p->ofile[i])
       np->ofile[i] = filedup(p->ofile[i]);
   np->cwd = idup(p->cwd);
-  // keep sanbox mask in child process
+  // keep sanbox entities in child process
   np->smask = p->smask;
+  safestrcpy(np->spath, p->spath, MAXPATH);
 
   safestrcpy(np->name, p->name, sizeof(p->name));
 

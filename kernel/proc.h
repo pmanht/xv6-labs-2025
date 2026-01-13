@@ -104,5 +104,6 @@ struct proc {
   struct file *ofile[NOFILE];  // Open files
   struct inode *cwd;           // Current directory
   char name[16];               // Process name (debugging)
-  uint32 smask;                // Save sandbox bitmask from user
+  uint32 smask;                // Save sandbox bitmask
+  char spath[MAXPATH];         // Save sandbox pathname
 };

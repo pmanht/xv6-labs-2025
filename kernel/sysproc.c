@@ -119,5 +119,8 @@ sys_interpose(void)
     return -1;
 
   argint(0, (int*)&p->smask);
+  if(argstr(1, p->spath, MAXPATH) < 0)
+    return -1;
+
   return 1;
 }

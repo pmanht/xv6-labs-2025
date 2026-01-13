@@ -105,3 +105,19 @@ sys_uptime(void)
   release(&tickslock);
   return xticks;
 }
+
+
+//Save interpose bitmask from user app
+//to proc structure
+uint64
+sys_interpose(void)
+{
+  struct proc* p;
+
+  p = myproc();
+  if (!p)
+    return -1;
+
+  argint(0, (int*)&p->smask);
+  return 1;
+}

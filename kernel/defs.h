@@ -183,3 +183,5 @@ void            virtio_disk_intr(void);
 
 // number of elements in fixed-size array
 #define NELEM(x) (sizeof(x)/sizeof((x)[0]))
+
+#define BIT1(p, num) (((p->smask) >> num) & 0x00000001)

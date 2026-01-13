@@ -1,0 +1,60 @@
+1. Looking at the backtrace output, which function called syscall?
+    Ans: usertrap(void).
+
+2. What is the value of p->trapframe->a7 and what does that value represent? 
+    Ans: value of p->trapframe->a7 is 15 (SYS_open). it represents for system call open().
+
+3. What was the previous mode that the CPU was in? 
+    Ans: 
+    4.1.1 Supervisor Status Register (sstatus) in riscv-privileged-20211203 document
+    - The SPP bit indicates the privilege level at which a hart was executing before entering supervisor
+    mode. When a trap is taken, SPP is set to 0 if the trap originated from user mode, or 1 otherwise.
+     8     7      6     5     4  2    1     0
+    SPP | WPRI | UBE | SPIE | WPRI | SIE | WPRI
+
+    p /x $sstatus
+    $1 = 0x200000022 => SPP bit = 0 => The previous mode that the CPU was in is user mode.
+
+4. Write down the assembly instruction the kernel is panicing at. Which register corresponds to the variable num? 
+    num = *(int *)0;
+    80001cf8:	00002683          	lw	a3,0(zero) # 0 <_entry-0x80000000>
+
+    <address>: <machine code> <decoded instruction>
+    Explain instruction:
+        lw → load word (32-bit)
+        a3 → destination register (x13)
+        zero → register x0, which is hard-wired to 0
+        0(zero) → memory address 0 + 0 = 0x0
+        => it means load a 32-bit word from memory address 0x00000000 into register a3
+
+        RISC-V lw instruction format (I-type):
+        
+                      imm[11:0]  | rs1  | funct3 |  rd | opcode
+                        12 bits  |  5   |   3    |  5  |   7
+        0x00002683 = 000000000000  00000   010    01101 0000011
+
+        Opcode 0x03 = LOAD instructions
+        funct3 0x02 = LW (load word)
+        Register x13 → a3
+        Register x0 → zero
+        Offset (imm[11:0]) = 0
+        => decoded instruction: lw a3, 0(zero)
+
+        80001cf8 = Program Counter (PC) value
+        This address is physical or virtual address??? (i need to check this step is run before page tables is setup (hw privileged mode) or later (usermode))
+
+    The register a3 corresponds to variable num.
+
+5. Why does the kernel crash?
+    Ans:
+    Log kernel crash:
+        hart 1 starting
+        hart 2 starting
+        scause=0xd sepc=0x80001cf8 stval=0x0
+        panic: kerneltrap
+
+    As table 4.2 in riscv-privileged-20211203, scause=0xd means Load page fault.
+    It tries to load value at error address (address 0).
+
+6. What is the name of the process that was running when the kernel paniced? What is its process id (pid)? 
+    Ans: the process name is "init" with its pid = 1.
